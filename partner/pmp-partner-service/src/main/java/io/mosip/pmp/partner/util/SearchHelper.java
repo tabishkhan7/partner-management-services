@@ -1,9 +1,8 @@
-package io.mosip.pmp.common.helper;
+package io.mosip.pmp.partner.util;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -21,7 +20,6 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.HibernateException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -31,29 +29,27 @@ import org.springframework.transaction.annotation.Transactional;
 
 import io.mosip.kernel.core.dataaccess.exception.DataAccessLayerException;
 import io.mosip.kernel.core.util.DateUtils;
-import io.mosip.kernel.dataaccess.hibernate.constant.HibernateErrorCode;
-import io.mosip.pmp.common.constant.FilterTypeEnum;
-import io.mosip.pmp.common.constant.OrderEnum;
-import io.mosip.pmp.common.constant.SearchErrorCode;
-import io.mosip.pmp.common.dto.OptionalFilter;
-import io.mosip.pmp.common.dto.PageResponseDto;
-import io.mosip.pmp.common.dto.Pagination;
-import io.mosip.pmp.common.dto.SearchDto;
-import io.mosip.pmp.common.dto.SearchFilter;
-import io.mosip.pmp.common.dto.SearchSort;
-import io.mosip.pmp.common.exception.RequestException;
+import io.mosip.pmp.authdevice.dto.Pagination;
+import io.mosip.pmp.authdevice.dto.SearchDto;
+import io.mosip.pmp.authdevice.dto.SearchFilter;
+import io.mosip.pmp.authdevice.dto.SearchSort;
+import io.mosip.pmp.authdevice.exception.RequestException;
+import io.mosip.pmp.partner.constant.FilterTypeEnum;
+import io.mosip.pmp.partner.constant.HibernateErrorCode;
+import io.mosip.pmp.partner.constant.OrderEnum;
+import io.mosip.pmp.partner.constant.PartnerSearchErrorCode;
 
 /**
- * Generating dynamic query for partnerManagementData based on the search filters.
+ * Generating dynamic query for masterdata based on the search filters.
  * 
- * @author Tabish Khan
+ * @author Abhishek Kumar
  * @since 1.0.0
  */
 @Repository
 @Transactional(readOnly = true)
 public class SearchHelper {
-	@Value("${partner.search.maximum.rows}")
-	private int maximumRows;
+
+	private int maximumRows = 10;
 
 	private static final String ENTITY_IS_NULL = "entity is null";
 	private static final String WILD_CARD_CHARACTER = "%";
@@ -66,24 +62,9 @@ public class SearchHelper {
 	 */
 	@PersistenceContext
 	private EntityManager entityManager;
-	
-	
-	public <E> PageResponseDto<E> filterEntity(Class<E> entity,SearchDto dto) {
-		PageResponseDto<E> pageDto = new PageResponseDto<>();
-		List<SearchFilter> addList = new ArrayList<>();
-		OptionalFilter optionalFilter = new OptionalFilter(addList);
-		List<SearchFilter> zoneFilter = new ArrayList<>();
-		OptionalFilter zoneOptionalFilter = new OptionalFilter(zoneFilter);
-		Page<E> page =search(entity, dto, new OptionalFilter[] { optionalFilter, zoneOptionalFilter });
-		pageDto.setData(page.getContent());
-		pageDto.setFromRecord(0);
-		pageDto.setToRecord(page.getContent().size());
-		pageDto.setTotalRecord(page.getSize());
-		return pageDto;
-	}
 
 	/**
-	 * Method to search and sort the partnerManagementData.
+	 * Method to search and sort the masterdata.
 	 * 
 	 * @param entity          the entity class for which search will be applied
 	 * @param searchDto       which contains the list of filters, sort and
@@ -92,7 +73,7 @@ public class SearchHelper {
 	 * 
 	 * @return {@link Page} of entity
 	 */
-	public <E> Page<E> search(Class<E> entity, SearchDto searchDto, OptionalFilter[] optionalFilters) {
+	public <E> Page<E> search(Class<E> entity, SearchDto searchDto) {
 		long rows = 0l;
 		List<E> result;
 		Objects.requireNonNull(entity, ENTITY_IS_NULL);
@@ -108,7 +89,7 @@ public class SearchHelper {
 		countQuery.select(criteriaBuilder.count(countQuery.from(entity)));
 		// applying filters
 		if (!searchDto.getFilters().isEmpty())
-			filterQuery(criteriaBuilder, rootQuery, selectQuery, countQuery, searchDto.getFilters(), optionalFilters);
+			filterQuery(criteriaBuilder, rootQuery, selectQuery, countQuery, searchDto.getFilters());
 
 		// applying sorting
 		sortQuery(criteriaBuilder, rootQuery, selectQuery, searchDto.getSort());
@@ -147,19 +128,17 @@ public class SearchHelper {
 	 * @param selectQuery criteria select query
 	 * @param countQuery  criteria count query
 	 * @param filters     list of {@link SearchFilter}
+	 * @param langCode    language code if applicable
 	 */
 	private <E> void filterQuery(CriteriaBuilder builder, Root<E> root, CriteriaQuery<E> selectQuery,
-			CriteriaQuery<Long> countQuery, List<SearchFilter> filters, OptionalFilter[] optionalFilters) {
+			CriteriaQuery<Long> countQuery, List<SearchFilter> filters) {
 		final List<Predicate> predicates = new ArrayList<>();
 		if (filters != null && !filters.isEmpty()) {
 			filters.stream().filter(this::validateFilters).map(i -> buildFilters(builder, root, i))
 					.filter(Objects::nonNull).collect(Collectors.toCollection(() -> predicates));
 		}
 
-		if (optionalFilters != null && optionalFilters.length != 0) {
-			Arrays.stream(optionalFilters).forEach(i -> buildOptionalFilter(builder, root, i, predicates));
 
-		}
 
 		Predicate isDeletedTrue = builder.equal(root.get(DECOMISSION), Boolean.FALSE);
 		Predicate isDeletedNull = builder.isNull(root.get(DECOMISSION));
@@ -173,18 +152,6 @@ public class SearchHelper {
 
 	}
 
-	private <E> void buildOptionalFilter(CriteriaBuilder builder, Root<E> root, final OptionalFilter optionalFilters,
-			List<Predicate> predicates) {
-		if (optionalFilters.getFilters() != null && !optionalFilters.getFilters().isEmpty()) {
-			List<Predicate> optionalPredicates = optionalFilters.getFilters().stream().filter(this::validateFilters)
-					.map(i -> buildFilters(builder, root, i)).filter(Objects::nonNull).collect(Collectors.toList());
-			if (!optionalPredicates.isEmpty()) {
-				Predicate orPredicate = builder
-						.or(optionalPredicates.toArray(new Predicate[optionalPredicates.size()]));
-				predicates.add(orPredicate);
-			}
-		}
-	}
 
 	/**
 	 * Method to build {@link Predicate} out the {@link SearchFilter}
@@ -244,8 +211,8 @@ public class SearchHelper {
 				try {
 					path = root.get(i.getSortField());
 				} catch (IllegalArgumentException | IllegalStateException e) {
-					throw new RequestException(SearchErrorCode.INVALID_SORT_FIELD.getErrorCode(),
-							String.format(SearchErrorCode.INVALID_SORT_FIELD.getErrorMessage(), i.getSortField()));
+					throw new RequestException(PartnerSearchErrorCode.INVALID_SORT_FIELD.getErrorCode(), String
+							.format(PartnerSearchErrorCode.INVALID_SORT_FIELD.getErrorMessage(), i.getSortField()));
 				}
 				if (path != null) {
 					if (OrderEnum.asc.name().equalsIgnoreCase(i.getSortType()))
@@ -253,8 +220,8 @@ public class SearchHelper {
 					else if (OrderEnum.desc.name().equalsIgnoreCase(i.getSortType()))
 						return builder.desc(root.get(i.getSortField()));
 					else {
-						throw new RequestException(SearchErrorCode.INVALID_SORT_TYPE.getErrorCode(),
-								String.format(SearchErrorCode.INVALID_SORT_TYPE.getErrorMessage(), i.getSortType()));
+						throw new RequestException(PartnerSearchErrorCode.INVALID_SORT_TYPE.getErrorCode(), String
+								.format(PartnerSearchErrorCode.INVALID_SORT_TYPE.getErrorMessage(), i.getSortType()));
 					}
 				}
 				return null;
@@ -273,9 +240,9 @@ public class SearchHelper {
 	private void paginationQuery(Query query, Pagination page) {
 		if (page != null) {
 			if (page.getPageStart() < 0 || page.getPageFetch() < 1) {
-				throw new RequestException(SearchErrorCode.INVALID_PAGINATION_VALUE.getErrorCode(),
-						String.format(SearchErrorCode.INVALID_PAGINATION_VALUE.getErrorMessage(), page.getPageStart(),
-								page.getPageFetch()));
+				throw new RequestException(PartnerSearchErrorCode.INVALID_PAGINATION_VALUE.getErrorCode(),
+						String.format(PartnerSearchErrorCode.INVALID_PAGINATION_VALUE.getErrorMessage(),
+								page.getPageStart(), page.getPageFetch()));
 			} else {
 				query.setFirstResult(page.getPageStart() * page.getPageFetch());
 				query.setMaxResults(page.getPageFetch());
@@ -323,8 +290,8 @@ public class SearchHelper {
 				return builder.between(root.get(columnName), fromValue, toValue);
 			}
 		} catch (IllegalArgumentException | IllegalStateException | InvalidDataAccessApiUsageException e) {
-			throw new RequestException(SearchErrorCode.INVALID_COLUMN.getErrorCode(),
-					String.format(SearchErrorCode.INVALID_COLUMN.getErrorMessage(), filter.getColumnName()));
+			throw new RequestException(PartnerSearchErrorCode.INVALID_COLUMN.getErrorCode(),
+					String.format(PartnerSearchErrorCode.INVALID_COLUMN.getErrorMessage(), filter.getColumnName()));
 		}
 		return null;
 	}
@@ -408,8 +375,8 @@ public class SearchHelper {
 			if (filter.getColumnName() != null && !filter.getColumnName().trim().isEmpty()) {
 				return FilterTypes(filter);
 			} else {
-				throw new RequestException(SearchErrorCode.MISSING_FILTER_COLUMN.getErrorCode(),
-						SearchErrorCode.MISSING_FILTER_COLUMN.getErrorMessage());
+				throw new RequestException(PartnerSearchErrorCode.MISSING_FILTER_COLUMN.getErrorCode(),
+						PartnerSearchErrorCode.MISSING_FILTER_COLUMN.getErrorMessage());
 			}
 		}
 		return false;
@@ -421,8 +388,8 @@ public class SearchHelper {
 				return true;
 			}
 		} else {
-			throw new RequestException(SearchErrorCode.FILTER_TYPE_NOT_AVAILABLE.getErrorCode(),
-					String.format(SearchErrorCode.FILTER_TYPE_NOT_AVAILABLE.getErrorMessage(), filter.getColumnName()));
+			throw new RequestException(PartnerSearchErrorCode.FILTER_TYPE_NOT_AVAILABLE.getErrorCode(), String.format(
+					PartnerSearchErrorCode.FILTER_TYPE_NOT_AVAILABLE.getErrorMessage(), filter.getColumnName()));
 		}
 		return false;
 	}
@@ -442,8 +409,8 @@ public class SearchHelper {
 					&& (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false"))) {
 				flag = true;
 			} else {
-				throw new RequestException(SearchErrorCode.INVALID_VALUE.getErrorCode(),
-						SearchErrorCode.INVALID_VALUE.getErrorMessage());
+				throw new RequestException(PartnerSearchErrorCode.INVALID_VALUE.getErrorCode(),
+						PartnerSearchErrorCode.INVALID_VALUE.getErrorMessage());
 			}
 
 		} else if (!FilterTypeEnum.BETWEEN.name().equalsIgnoreCase(filter.getType())) {
@@ -451,8 +418,8 @@ public class SearchHelper {
 			if (value != null && !value.trim().isEmpty()) {
 				flag = true;
 			} else {
-				throw new RequestException(SearchErrorCode.INVALID_VALUE.getErrorCode(),
-						SearchErrorCode.INVALID_VALUE.getErrorMessage());
+				throw new RequestException(PartnerSearchErrorCode.INVALID_VALUE.getErrorCode(),
+						PartnerSearchErrorCode.INVALID_VALUE.getErrorMessage());
 			}
 		} else {
 			String fromValue = filter.getFromValue();
@@ -460,8 +427,8 @@ public class SearchHelper {
 			if (fromValue != null && !fromValue.trim().isEmpty() && toValue != null && !toValue.trim().isEmpty()) {
 				flag = true;
 			} else {
-				throw new RequestException(SearchErrorCode.INVALID_BETWEEN_VALUES.getErrorCode(), String
-						.format(SearchErrorCode.INVALID_BETWEEN_VALUES.getErrorMessage(), filter.getColumnName()));
+				throw new RequestException(PartnerSearchErrorCode.INVALID_BETWEEN_VALUES.getErrorCode(), String.format(
+						PartnerSearchErrorCode.INVALID_BETWEEN_VALUES.getErrorMessage(), filter.getColumnName()));
 			}
 		}
 		return flag;
@@ -480,11 +447,11 @@ public class SearchHelper {
 			if (field != null && !field.isEmpty() && type != null && !type.isEmpty()) {
 				return true;
 			} else {
-				throw new RequestException(SearchErrorCode.INVALID_SORT_INPUT.getErrorCode(),
-						SearchErrorCode.INVALID_SORT_INPUT.getErrorMessage());
+				throw new RequestException(PartnerSearchErrorCode.INVALID_SORT_INPUT.getErrorCode(),
+						PartnerSearchErrorCode.INVALID_SORT_INPUT.getErrorMessage());
 			}
 		}
 		return false;
 	}
-
 }
+

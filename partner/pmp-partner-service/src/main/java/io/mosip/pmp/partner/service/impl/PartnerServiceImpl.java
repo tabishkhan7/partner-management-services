@@ -16,8 +16,10 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.kernel.core.authmanager.authadapter.model.AuthUserDetails;
 import io.mosip.kernel.core.util.EmptyCheckUtils;
 import io.mosip.pmp.authdevice.dto.MosipUserDto;
+import io.mosip.pmp.authdevice.dto.PageResponseDto;
+import io.mosip.pmp.authdevice.dto.SearchDto;
+import io.mosip.pmp.authdevice.dto.SearchFilter;
 import io.mosip.pmp.authdevice.dto.UserRegistrationRequestDto;
 import io.mosip.pmp.keycloak.impl.KeycloakImpl;
 import io.mosip.pmp.partner.constant.APIKeyReqIdStatusInProgressConstant;
@@ -60,6 +65,7 @@ import io.mosip.pmp.partner.dto.PartnerCertificateRequestDto;
 import io.mosip.pmp.partner.dto.PartnerCertificateResponseDto;
 import io.mosip.pmp.partner.dto.PartnerRequest;
 import io.mosip.pmp.partner.dto.PartnerResponse;
+import io.mosip.pmp.partner.dto.PartnerSearchDto;
 import io.mosip.pmp.partner.dto.PartnerUpdateRequest;
 import io.mosip.pmp.partner.dto.PolicyIdResponse;
 import io.mosip.pmp.partner.dto.RetrievePartnerDetailsResponse;
@@ -95,6 +101,9 @@ import io.mosip.pmp.partner.repository.PartnerServiceRepository;
 import io.mosip.pmp.partner.repository.PartnerTypeRepository;
 import io.mosip.pmp.partner.repository.PolicyGroupRepository;
 import io.mosip.pmp.partner.service.PartnerService;
+import io.mosip.pmp.partner.util.MapperUtils;
+import io.mosip.pmp.partner.util.OptionalFilter;
+import io.mosip.pmp.partner.util.SearchHelper;
 import io.mosip.pmp.partner.util.PartnerUtil;
 import io.mosip.pmp.partner.util.RestUtil;
 
@@ -137,6 +146,9 @@ public class PartnerServiceImpl implements PartnerService {
 
 	@Autowired
 	BiometricExtractorProviderRepository extractorProviderRepository;
+	
+	@Autowired
+	SearchHelper partnerSearchHelper;
 
 	@Autowired
 	RestUtil restUtil;
@@ -831,5 +843,20 @@ public class PartnerServiceImpl implements PartnerService {
 		}
 		response.setExtractors(extractors);
 		return response;
+	}
+
+	@Override
+	public <E> PageResponseDto<PartnerSearchDto> searchEnity(Class<E> entity,SearchDto dto) {
+		List<PartnerSearchDto> partners=new ArrayList<>();
+		PageResponseDto<PartnerSearchDto> pageDto = new PageResponseDto<>();		
+		Page<E> page =partnerSearchHelper.search(entity, dto);
+		if (page.getContent() != null && !page.getContent().isEmpty()) {
+			 partners=MapperUtils.mapAll(page.getContent(), PartnerSearchDto.class);
+		}
+		pageDto.setData(partners);
+		pageDto.setFromRecord(0);
+		pageDto.setToRecord(page.getContent().size());
+		pageDto.setTotalRecord(page.getContent().size());
+		return pageDto;
 	}
 }
