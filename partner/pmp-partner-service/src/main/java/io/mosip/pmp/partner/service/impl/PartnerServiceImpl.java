@@ -13,6 +13,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -845,11 +848,14 @@ public class PartnerServiceImpl implements PartnerService {
 		return response;
 	}
 
+	@PersistenceContext
+	private EntityManager entityManager;
+	
 	@Override
 	public <E> PageResponseDto<PartnerSearchDto> searchEnity(Class<E> entity,SearchDto dto) {
 		List<PartnerSearchDto> partners=new ArrayList<>();
 		PageResponseDto<PartnerSearchDto> pageDto = new PageResponseDto<>();		
-		Page<E> page =partnerSearchHelper.search(entity, dto);
+		Page<E> page =partnerSearchHelper.search(entityManager,entity, dto);
 		if (page.getContent() != null && !page.getContent().isEmpty()) {
 			 partners=MapperUtils.mapAll(page.getContent(), PartnerSearchDto.class);
 		}
