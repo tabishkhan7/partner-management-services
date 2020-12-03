@@ -58,12 +58,6 @@ public class SearchHelper {
 	private static final String IS_ACTIVE_COLUMN_NAME = "isActive";
 
 	/**
-	 * Field for interface used to interact with the persistence context.
-	 */
-	@PersistenceContext
-	private EntityManager entityManager;
-
-	/**
 	 * Method to search and sort the masterdata.
 	 * 
 	 * @param entity          the entity class for which search will be applied
@@ -73,7 +67,7 @@ public class SearchHelper {
 	 * 
 	 * @return {@link Page} of entity
 	 */
-	public <E> Page<E> search(Class<E> entity, SearchDto searchDto) {
+	public <E> Page<E> search(EntityManager entityManager,Class<E> entity, SearchDto searchDto) {
 		long rows = 0l;
 		List<E> result;
 		Objects.requireNonNull(entity, ENTITY_IS_NULL);

@@ -12,6 +12,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -597,11 +599,14 @@ public class RegRegisteredDeviceServiceImpl implements RegRegisteredDeviceServic
 		}
 	}
 
+	@PersistenceContext(unitName = "regDeviceEntityManagerFactory")
+	private EntityManager entityManager;
+	
 	@Override
 	public <E> PageResponseDto<RegisteredDevice> searchEnity(Class<E> entity, SearchDto dto) {
 		List<RegisteredDevice> partners=new ArrayList<>();
 		PageResponseDto<RegisteredDevice> pageDto = new PageResponseDto<>();		
-		Page<E> page =searchHelper.search(entity, dto);
+		Page<E> page =searchHelper.search(entityManager,entity, dto);
 		if (page.getContent() != null && !page.getContent().isEmpty()) {
 			 partners=MapperUtils.mapAll(page.getContent(), RegisteredDevice.class);
 		}
