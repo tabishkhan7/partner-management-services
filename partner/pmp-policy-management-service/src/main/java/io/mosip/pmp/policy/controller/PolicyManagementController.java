@@ -312,7 +312,7 @@ public class PolicyManagementController {
 	 */
 	
 	@ResponseFilter
-	@PostMapping("/policyGroup/search")
+	@PostMapping("/policies/policyGroup/search")
 	@PreAuthorize("hasAnyRole('PARTNER','PMS_USER','AUTH_PARTNER','DEVICE_PROVIDER','FTM_PROVIDER','CREDENTIAL_PARTNER','CREDENTIAL_ISSUANCE','CREATE_SHARE','ID_AUTHENTICATION')")
 	public ResponseWrapper<PageResponseDto<PolicyGroup>> searchPolicyGroup(
 			@RequestBody @Valid RequestWrapper<SearchDto> request) {
@@ -324,7 +324,7 @@ public class PolicyManagementController {
 	}
 	
 	@ResponseFilter
-	@PostMapping("/policy/search")
+	@PostMapping("/policies/search")
 	@PreAuthorize("hasAnyRole('PARTNER','PMS_USER','AUTH_PARTNER','DEVICE_PROVIDER','FTM_PROVIDER','CREDENTIAL_PARTNER','CREDENTIAL_ISSUANCE','CREATE_SHARE','ID_AUTHENTICATION')")
 	public ResponseWrapper<PageResponseDto<SearchAuthPolicy>> searchPolicy(
 			@RequestBody @Valid RequestWrapper<SearchDto> request) {
