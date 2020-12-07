@@ -144,10 +144,6 @@ public class SecureBiometricInterfaceController {
 		return responseWrapper;
 	}
 	
-	@GetMapping
-	public void getSecureBiometricInterfaceDetails(@RequestBody @Valid RequestWrapper<SearchDto> request) {
-		
-	}
 	
 	@ResponseFilter
 	@PostMapping("/search")

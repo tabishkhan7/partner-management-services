@@ -167,10 +167,6 @@ public class DeviceDetailController {
 		return responseWrapper;
 	}
 	
-	@GetMapping
-	public void getDeviceDetails(@RequestBody @Valid RequestWrapper<SearchDto> request) {
-		
-	}
 	
 	@ResponseFilter
 	@PostMapping("/search")

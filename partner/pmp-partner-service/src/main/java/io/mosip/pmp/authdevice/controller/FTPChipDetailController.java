@@ -243,9 +243,5 @@ public class FTPChipDetailController {
 				"AUT-007");
 		return response;
     }
-	
-	@GetMapping
-	public void getFTPChipDetails(@RequestBody @Valid RequestWrapper<SearchDto> request) {
-		
-	}
+
 }

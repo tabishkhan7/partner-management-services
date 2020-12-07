@@ -80,10 +80,6 @@ public class RegisteredDeviceController {
 		return response;
 	}
 
-	@GetMapping
-	public void getRegisteredDeviceDetails(@RequestBody @Valid RequestWrapper<SearchDto> request) {
-		
-	}
 	
 	@ResponseFilter
 	@PostMapping("/search")
