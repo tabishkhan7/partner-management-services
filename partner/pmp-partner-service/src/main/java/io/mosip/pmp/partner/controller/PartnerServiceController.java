@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import io.mosip.kernel.core.http.ResponseFilter;
 import io.mosip.pmp.authdevice.dto.PageResponseDto;
 import io.mosip.pmp.authdevice.dto.SearchDto;
+import io.mosip.pmp.partner.constant.PartnerManageEnum;
 import io.mosip.pmp.partner.core.RequestWrapper;
 import io.mosip.pmp.partner.core.ResponseWrapper;
 import io.mosip.pmp.partner.dto.APIkeyRequests;
@@ -47,6 +48,7 @@ import io.mosip.pmp.partner.dto.PartnerUpdateRequest;
 import io.mosip.pmp.partner.dto.RetrievePartnerDetailsResponse;
 import io.mosip.pmp.partner.entity.PartnerType;
 import io.mosip.pmp.partner.service.PartnerService;
+import io.mosip.pmp.partner.util.AuditUtil;
 import io.swagger.annotations.ApiParam;
 
 /**
@@ -81,6 +83,9 @@ public class PartnerServiceController {
 
 	@Autowired
 	PartnerService partnerService;
+	
+	@Autowired
+	AuditUtil auditUtil;
 
 	String msg = "mosip.partnermanagement.partners.retrieve";
 	String version = "1.0";
@@ -99,6 +104,7 @@ public class PartnerServiceController {
 	public ResponseEntity<ResponseWrapper<PartnerResponse>> partnerSelfRegistration(
 			@RequestBody @Valid RequestWrapper<PartnerRequest> request) {
 		LOGGER.info("partner self registration");
+		auditUtil.setAuditRequestDto(PartnerManageEnum.Partner_Registration);
 		ResponseWrapper<PartnerResponse> response = new ResponseWrapper<>();
 		PartnerResponse partnerResponse = null;
 		PartnerRequest partnerRequest = null;
@@ -129,6 +135,7 @@ public class PartnerServiceController {
 		ResponseWrapper<PartnerAPIKeyResponse> response = new ResponseWrapper<>();
 		PartnerAPIKeyResponse partnerAPIKeyResponse = null;
 		PartnerAPIKeyRequest partnerAPIKeyRequest = request.getRequest();
+		auditUtil.setAuditRequestDto(PartnerManageEnum.CREATE_PARTNER_API_KEY);
 		partnerAPIKeyResponse = partnerService.submitPartnerApiKeyReq(partnerAPIKeyRequest, partnerId);
 		response.setId(request.getId());
 		response.setVersion(request.getVersion());
@@ -148,9 +155,11 @@ public class PartnerServiceController {
 	public ResponseEntity<ResponseWrapper<String>> addBiometricExtractors(@PathVariable String partnerId ,@PathVariable String policyId,
 			@RequestBody @Valid RequestWrapper<ExtractorsDto> request){
 		ResponseWrapper<String> response = new ResponseWrapper<>();
+		auditUtil.setAuditRequestDto(PartnerManageEnum.PARTNER_BIOMETRICS_CREATE);
 		response.setResponse(partnerService.addBiometricExtractors(partnerId, policyId, request.getRequest()));
 		response.setId(request.getId());
 		response.setVersion(request.getVersion());
+		auditUtil.setAuditRequestDto(PartnerManageEnum.PARTNER_BIOMETRICS_CREATE_SUCCESS);
 		return new ResponseEntity<>(response, HttpStatus.OK);		
 	}
 	
@@ -166,6 +175,7 @@ public class PartnerServiceController {
 		ResponseWrapper<ExtractorsDto> response = new ResponseWrapper<>();
 		ExtractorsDto extractors = partnerService.getBiometricExtractors(partnerId, policyId);
 		response.setResponse(extractors);
+		auditUtil.setAuditRequestDto(PartnerManageEnum.PARTNER_BIOMETRICS_CREATE_SUCCESS);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	
@@ -182,6 +192,7 @@ public class PartnerServiceController {
 			@PathVariable @Valid String credentialType){
 		ResponseWrapper<String> response = new ResponseWrapper<>();
 		response.setResponse(partnerService.mapPartnerPolicyCredentialType(credentialType, partnerId, policyId));
+		auditUtil.setAuditRequestDto(PartnerManageEnum.PARTNER_POLICY_MAP_CREATE_SUCCESS);
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
 	
@@ -190,6 +201,7 @@ public class PartnerServiceController {
 	public ResponseEntity<ResponseWrapper<PartnerCredentialTypePolicyDto>> getCredentialTypePolicy(@PathVariable @Valid String partnerId,@PathVariable @Valid String credentialType) throws JsonParseException, JsonMappingException, IOException{
 		ResponseWrapper<PartnerCredentialTypePolicyDto> response = new ResponseWrapper<>();
 		response.setResponse(partnerService.getPartnerCredentialTypePolicy(credentialType, partnerId));
+		auditUtil.setAuditRequestDto(PartnerManageEnum.PARTNER_POLICY_MAP_CREATE_SUCCESS);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	
@@ -203,9 +215,11 @@ public class PartnerServiceController {
 	@RequestMapping(value = "/{partnerId}/addcontact", method = RequestMethod.POST)
 	public ResponseEntity<ResponseWrapper<String>> addContact(@PathVariable String partnerId,@RequestBody @Valid RequestWrapper<AddContactRequestDto>request){
 		ResponseWrapper<String> response = new ResponseWrapper<>();
+		auditUtil.setAuditRequestDto(PartnerManageEnum.CREATE_UPDATE_CONTACT_DETAILS);
 		response.setResponse(partnerService.createAndUpdateContactDetails(request.getRequest(),partnerId));
 		response.setId(request.getId());
 		response.setVersion(request.getVersion());
+		auditUtil.setAuditRequestDto(PartnerManageEnum.CREATE_UPDATE_CONTACT_DETAILS_SUCCESS);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	/**
@@ -228,6 +242,7 @@ public class PartnerServiceController {
 		response.setId(request.getId());
 		response.setVersion(request.getVersion());
 		response.setResponse(partnerResponse);
+		auditUtil.setAuditRequestDto(PartnerManageEnum.CREATE_UPDATE_CONTACT_DETAILS_SUCCESS);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	
@@ -244,10 +259,12 @@ public class PartnerServiceController {
 			@PathVariable String partnerId) {
 		ResponseWrapper<RetrievePartnerDetailsResponse> response = new ResponseWrapper<>();
 		RetrievePartnerDetailsResponse retrievePartnerDetailsResponse = null;
+		auditUtil.setAuditRequestDto(PartnerManageEnum.GET_PARTNER_DETAILS);
 		retrievePartnerDetailsResponse = partnerService.getPartnerDetails(partnerId);
 		response.setId(msg);
 		response.setVersion(version);
 		response.setResponse(retrievePartnerDetailsResponse);
+		auditUtil.setAuditRequestDto(PartnerManageEnum.GET_PARTNER_DETAILS_SUCCESS);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}			
 
@@ -266,10 +283,12 @@ public class PartnerServiceController {
 			@PathVariable String partnerId) {
 		ResponseWrapper<List<APIkeyRequests>> response = new ResponseWrapper<>();
 		List<APIkeyRequests> apikeyRequestsList = null;
+		auditUtil.setAuditRequestDto(PartnerManageEnum.GET_PARTNER_API_KEY);
 		apikeyRequestsList = partnerService.retrieveAllApiKeyRequestsSubmittedByPartner(partnerId);
 		response.setId(msg);
 		response.setVersion(version);
 		response.setResponse(apikeyRequestsList);
+		auditUtil.setAuditRequestDto(PartnerManageEnum.GET_PARTNER_API_KEY_SUCCESS);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
@@ -295,6 +314,7 @@ public class PartnerServiceController {
 		response.setId(msg);
 		response.setVersion(version);
 		response.setResponse(aPIkeyRequests);
+		auditUtil.setAuditRequestDto(PartnerManageEnum.GET_PARTNER_API_KEY_SUCCESS);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	
@@ -314,6 +334,7 @@ public class PartnerServiceController {
 			@ApiParam("Upload CA/Sub-CA certificates.") @RequestBody @Valid RequestWrapper<CACertificateRequestDto> caCertRequestDto) throws JsonParseException, JsonMappingException, JsonProcessingException, IOException {
 		ResponseWrapper<CACertificateResponseDto> response = new ResponseWrapper<>();
 		response.setResponse(partnerService.uploadCACertificate(caCertRequestDto.getRequest()));
+		auditUtil.setAuditRequestDto(PartnerManageEnum.GET_PARTNER_CERTIFICATE_SUCCESS);
 		return response;
     }
     
@@ -334,6 +355,7 @@ public class PartnerServiceController {
 			@ApiParam("Upload Partner Certificates.") @RequestBody @Valid RequestWrapper<PartnerCertificateRequestDto> partnerCertRequestDto) throws JsonParseException, JsonMappingException, JsonProcessingException, IOException {
 		ResponseWrapper<PartnerCertificateResponseDto> response = new ResponseWrapper<>();
 		response.setResponse(partnerService.uploadPartnerCertificate(partnerCertRequestDto.getRequest()));
+		auditUtil.setAuditRequestDto(PartnerManageEnum.GET_PARTNER_CERTIFICATE_SUCCESS);
 		return response;
 	}
 
@@ -355,6 +377,7 @@ public class PartnerServiceController {
 		PartnerCertDownloadRequestDto requestDto = new PartnerCertDownloadRequestDto();
 		requestDto.setPartnerId(partnerId);		
 		response.setResponse(partnerService.getPartnerCertificate(requestDto));
+		auditUtil.setAuditRequestDto(PartnerManageEnum.GET_PARTNER_CERTIFICATE_SUCCESS);
 		return response;
     }	
 	
@@ -364,9 +387,9 @@ public class PartnerServiceController {
 	public ResponseWrapper<PageResponseDto<PartnerSearchDto>> searchPartner(
 			@RequestBody @Valid RequestWrapper<SearchDto> request) {
 		ResponseWrapper<PageResponseDto<PartnerSearchDto>> responseWrapper = new ResponseWrapper<>();
-
+		
 		responseWrapper.setResponse(partnerService.searchPartner(request.getRequest()));
-
+		auditUtil.setAuditRequestDto(PartnerManageEnum.GET_PARTNER_DETAILS);
 		return responseWrapper;
 	}
 
@@ -378,7 +401,7 @@ public class PartnerServiceController {
 		ResponseWrapper<PageResponseDto<PartnerType>> responseWrapper = new ResponseWrapper<>();
 
 		responseWrapper.setResponse(partnerService.searchPartnerType(request.getRequest()));
-
+		auditUtil.setAuditRequestDto(PartnerManageEnum.GET_PARTNER_DETAILS);
 		return responseWrapper;
 	}
 }

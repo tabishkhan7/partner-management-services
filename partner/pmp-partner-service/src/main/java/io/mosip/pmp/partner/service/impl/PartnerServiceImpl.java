@@ -50,6 +50,7 @@ import io.mosip.pmp.partner.constant.PartnerAPIKeyReqDoesNotExistConstant;
 import io.mosip.pmp.partner.constant.PartnerDoesNotExistExceptionConstant;
 import io.mosip.pmp.partner.constant.PartnerExceptionConstants;
 import io.mosip.pmp.partner.constant.PartnerIdExceptionConstant;
+import io.mosip.pmp.partner.constant.PartnerManageEnum;
 import io.mosip.pmp.partner.constant.PartnerTypeDoesNotExistConstant;
 import io.mosip.pmp.partner.constant.PolicyGroupDoesNotExistConstant;
 import io.mosip.pmp.partner.core.RequestWrapper;
@@ -109,6 +110,7 @@ import io.mosip.pmp.partner.repository.PartnerServiceRepository;
 import io.mosip.pmp.partner.repository.PartnerTypeRepository;
 import io.mosip.pmp.partner.repository.PolicyGroupRepository;
 import io.mosip.pmp.partner.service.PartnerService;
+import io.mosip.pmp.partner.util.AuditUtil;
 import io.mosip.pmp.partner.util.MapperUtils;
 import io.mosip.pmp.partner.util.PartnerUtil;
 import io.mosip.pmp.partner.util.RestUtil;
@@ -168,6 +170,9 @@ public class PartnerServiceImpl implements PartnerService {
 	
 	@Autowired
 	SearchHelper partnerSearchHelper;
+	
+	@Autowired
+	AuditUtil auditUtil;
 
 	@Autowired
 	private ObjectMapper mapper;
@@ -211,18 +216,21 @@ public class PartnerServiceImpl implements PartnerService {
 	public PartnerResponse savePartner(PartnerRequest request) {
 		if (!emailValidator(request.getEmailId())) {
 			LOGGER.error(request.getEmailId() + " : this is invalid email");
+			auditUtil.setAuditRequestDto(PartnerManageEnum.PARTNER_INVALID_EMAIL_CREATE);
 			throw new EmailIdAlreadyExistException(EmailIdExceptionConstant.INVALID_EMAIL_ID_EXCEPTION.getErrorCode(),
 					EmailIdExceptionConstant.INVALID_EMAIL_ID_EXCEPTION.getErrorMessage());
 
 		}
 		if (request.getPartnerId().length() > partnerIdMaxLength) {
 			LOGGER.error(request.getOrganizationName() + " : this is duplicate partner");
+			auditUtil.setAuditRequestDto(PartnerManageEnum.PARTNER_NAME_EXISTS_CREATE);
 			throw new PartnerServiceException(PartnerExceptionConstants.PARTNER_ID_LENGTH_EXCEPTION.getErrorCode(),
 					PartnerExceptionConstants.PARTNER_ID_LENGTH_EXCEPTION.getErrorMessage() + partnerIdMaxLength);
 		}
 		Optional<Partner> partnerById = partnerRepository.findById(request.getPartnerId());
 		if (!partnerById.isEmpty()) {
 			LOGGER.error(request.getOrganizationName() + " : this is duplicate partner");
+			auditUtil.setAuditRequestDto(PartnerManageEnum.PARTNER_NAME_EXISTS_CREATE);
 			throw new PartnerAlreadyRegisteredException(
 					PartnerIdExceptionConstant.PARTNER_ALREADY_REGISTERED_WITH_ID_EXCEPTION.getErrorCode(),
 					PartnerIdExceptionConstant.PARTNER_ALREADY_REGISTERED_WITH_ID_EXCEPTION.getErrorMessage());
@@ -230,6 +238,7 @@ public class PartnerServiceImpl implements PartnerService {
 		Partner partnerFromDb = partnerRepository.findByName(request.getOrganizationName());
 		if (partnerFromDb != null) {
 			LOGGER.error(request.getOrganizationName() + " : this is duplicate partner");
+			auditUtil.setAuditRequestDto(PartnerManageEnum.PARTNER_NAME_EXISTS_CREATE);
 			throw new PartnerAlreadyRegisteredException(
 					PartnerIdExceptionConstant.PARTNER_ALREADY_REGISTERED_EXCEPTION.getErrorCode(),
 					PartnerIdExceptionConstant.PARTNER_ALREADY_REGISTERED_EXCEPTION.getErrorMessage());
@@ -238,6 +247,7 @@ public class PartnerServiceImpl implements PartnerService {
 		partnerFromDb = findPartnerByEmail(request.getEmailId());
 		if (partnerFromDb != null) {
 			LOGGER.error(request.getEmailId() + " : this is duplicate email");
+			auditUtil.setAuditRequestDto(PartnerManageEnum.PARTNER_INVALID_EMAIL_CREATE);
 			throw new EmailIdAlreadyExistException(
 					EmailIdExceptionConstant.EMAIL_ALREADY_EXISTS_EXCEPTION.getErrorCode(),
 					EmailIdExceptionConstant.EMAIL_ALREADY_EXISTS_EXCEPTION.getErrorMessage());
@@ -246,6 +256,7 @@ public class PartnerServiceImpl implements PartnerService {
 		Optional<PartnerType> partnerType = partnerTypeRepository.findById(request.getPartnerType());
 		if (partnerType.isEmpty()) {
 			LOGGER.error(request.getPolicyGroup() + " : Policy Group is not availavle for the partner");
+			auditUtil.setAuditRequestDto(PartnerManageEnum.POLICY_GROUP_ABSENT_CREATE);
 			throw new PartnerTypeDoesNotExistException(
 					PartnerTypeDoesNotExistConstant.PARTNER_TYPE_DOES_NOT_EXIST.getErrorCode(),
 					PartnerTypeDoesNotExistConstant.PARTNER_TYPE_DOES_NOT_EXIST.getErrorMessage());
@@ -256,6 +267,7 @@ public class PartnerServiceImpl implements PartnerService {
 			policyGroup = policyGroupRepository.findByName(request.getPolicyGroup());
 			if (policyGroup == null) {
 				LOGGER.error(request.getPolicyGroup() + " : Policy Group is not availavle for the partner");
+				auditUtil.setAuditRequestDto(PartnerManageEnum.POLICY_GROUP_ABSENT_CREATE);
 				throw new PolicyGroupDoesNotExistException(
 						PolicyGroupDoesNotExistConstant.POLICY_GROUP_DOES_NOT_EXIST.getErrorCode(),
 						PolicyGroupDoesNotExistConstant.POLICY_GROUP_DOES_NOT_EXIST.getErrorMessage());
@@ -280,6 +292,7 @@ public class PartnerServiceImpl implements PartnerService {
 		PartnerResponse partnerResponse = new PartnerResponse();
 		partnerResponse.setPartnerId(partner.getId());
 		partnerResponse.setStatus("Active");
+		auditUtil.setAuditRequestDto(PartnerManageEnum.CREATE_PARTNER_SUCCESS);
 		return partnerResponse;
 	}
 
@@ -321,6 +334,7 @@ public class PartnerServiceImpl implements PartnerService {
 			return response;
 		} else {
 			LOGGER.info(partnerID + ": Partner is not available");
+			auditUtil.setAuditRequestDto(PartnerManageEnum.PARTNER_ABSENT);
 			throw new PartnerDoesNotExistsException(
 					PartnerDoesNotExistExceptionConstant.PARTNER_DOES_NOT_EXIST_EXCEPTION.getErrorCode(),
 					PartnerDoesNotExistExceptionConstant.PARTNER_DOES_NOT_EXIST_EXCEPTION.getErrorMessage());
@@ -365,6 +379,7 @@ public class PartnerServiceImpl implements PartnerService {
 		Optional<Partner> partnerFromDb = partnerRepository.findById(partnerID);
 		if (partnerFromDb.isEmpty()) {
 			LOGGER.info(partnerID + ": Partner is not available");
+			auditUtil.setAuditRequestDto(PartnerManageEnum.PARTNER_ABSENT);
 			throw new PartnerDoesNotExistException(
 					PartnerDoesNotExistExceptionConstant.PARTNER_DOES_NOT_EXIST_EXCEPTION.getErrorCode(),
 					PartnerDoesNotExistExceptionConstant.PARTNER_DOES_NOT_EXIST_EXCEPTION.getErrorMessage());
@@ -399,6 +414,7 @@ public class PartnerServiceImpl implements PartnerService {
 	public String createAndUpdateContactDetails(AddContactRequestDto request, String partnerId) {
 		if (!emailValidator(request.getEmailId())) {
 			LOGGER.error(request.getEmailId() + " : this is invalid email");
+			auditUtil.setAuditRequestDto(PartnerManageEnum.EMAIL_NOT_ALLOWED);
 			throw new EmailIdAlreadyExistException(EmailIdExceptionConstant.INVALID_EMAIL_ID_EXCEPTION.getErrorCode(),
 					EmailIdExceptionConstant.INVALID_EMAIL_ID_EXCEPTION.getErrorMessage());
 		}
@@ -415,6 +431,7 @@ public class PartnerServiceImpl implements PartnerService {
 			Optional<Partner> partnerFromDb = partnerRepository.findById(partnerId);
 			if (partnerFromDb.isEmpty()) {
 				LOGGER.info(partnerId + ": Partner is not available");
+				auditUtil.setAuditRequestDto(PartnerManageEnum.PARTNER_ABSENT);
 				throw new PartnerDoesNotExistException(
 						PartnerDoesNotExistExceptionConstant.PARTNER_DOES_NOT_EXIST_EXCEPTION.getErrorCode(),
 						PartnerDoesNotExistExceptionConstant.PARTNER_DOES_NOT_EXIST_EXCEPTION.getErrorMessage());
@@ -464,11 +481,13 @@ public class PartnerServiceImpl implements PartnerService {
 	public PartnerAPIKeyResponse submitPartnerApiKeyReq(PartnerAPIKeyRequest request, String partnerID) {
 		Optional<Partner> partnerFromDb = partnerRepository.findById(partnerID);
 		if (partnerFromDb.isEmpty()) {
+			auditUtil.setAuditRequestDto(PartnerManageEnum.PARTNER_ABSENT);
 			throw new PartnerDoesNotExistsException(
 					PartnerDoesNotExistExceptionConstant.PARTNER_DOES_NOT_EXIST_EXCEPTION.getErrorCode(),
 					PartnerDoesNotExistExceptionConstant.PARTNER_DOES_NOT_EXIST_EXCEPTION.getErrorMessage());
 		}
 		if (partnerFromDb.get().getIsActive() == false) {
+			auditUtil.setAuditRequestDto(PartnerManageEnum.PARTNER_ABSENT);
 			throw new PartnerDoesNotExistsException(
 					PartnerDoesNotExistExceptionConstant.PARTNER_DOES_NOT_EXIST_EXCEPTION.getErrorCode(),
 					PartnerDoesNotExistExceptionConstant.PARTNER_DOES_NOT_EXIST_EXCEPTION.getErrorMessage());
@@ -477,6 +496,7 @@ public class PartnerServiceImpl implements PartnerService {
 				.findByPolicyGroupAndName(partnerFromDb.get().getPolicyGroupId(), request.getPolicyName());
 		if (authPolicyFromDb == null) {
 			LOGGER.info(request.getPolicyName() + ": Invalied Policy Group");
+			auditUtil.setAuditRequestDto(PartnerManageEnum.POLICY_GROUP_ABSENT_CREATE);
 			throw new PolicyGroupDoesNotExistException(
 					PolicyGroupDoesNotExistConstant.POLICY_GROUP_DOES_NOT_EXIST.getErrorCode(),
 					PolicyGroupDoesNotExistConstant.POLICY_GROUP_DOES_NOT_EXIST.getErrorMessage());
@@ -495,6 +515,7 @@ public class PartnerServiceImpl implements PartnerService {
 		partnerAPIKeyResponse.setApiRequestId(partnerPolicyRequest.getId());
 		partnerAPIKeyResponse.setMessage("PartnerAPIKeyRequest successfully created");
 		LOGGER.info("PartnerAPIKeyRequest Successfully created");
+		auditUtil.setAuditRequestDto(PartnerManageEnum.CREATE_PARTNER_API_KEY_SUCCESS);
 		return partnerAPIKeyResponse;
 	}
 
@@ -768,6 +789,7 @@ public class PartnerServiceImpl implements PartnerService {
 		if (!EmptyCheckUtils.isNullEmpty(partnerId)) {
 			Optional<Partner> partnerFromDb = partnerRepository.findById(partnerId);
 			if (partnerFromDb.isEmpty()) {
+				auditUtil.setAuditRequestDto(PartnerManageEnum.PARTNER_ABSENT);
 				throw new PartnerDoesNotExistsException(
 						PartnerDoesNotExistExceptionConstant.PARTNER_DOES_NOT_EXIST_EXCEPTION.getErrorCode(),
 						PartnerDoesNotExistExceptionConstant.PARTNER_DOES_NOT_EXIST_EXCEPTION.getErrorMessage());
@@ -783,6 +805,7 @@ public class PartnerServiceImpl implements PartnerService {
 		if (!EmptyCheckUtils.isNullEmpty(policyId)) {
 			Optional<AuthPolicy> authPolicy = authPolicyRepository.findById(policyId);
 			if (authPolicy.isEmpty()) {
+				auditUtil.setAuditRequestDto(PartnerManageEnum.POLICY_GROUP_ABSENT_CREATE);
 				throw new PolicyGroupDoesNotExistException(
 						PolicyGroupDoesNotExistConstant.POLICY_GROUP_DOES_NOT_EXIST.getErrorCode(),
 						PolicyGroupDoesNotExistConstant.POLICY_GROUP_DOES_NOT_EXIST.getErrorMessage());
@@ -792,6 +815,7 @@ public class PartnerServiceImpl implements PartnerService {
 		PartnerPolicyRequest partnerPolicyRequest = partnerPolicyRequestRepository.findByPartnerIdAndPolicyId(partnerId,
 				policyId);
 		if (partnerPolicyRequest == null) {
+			auditUtil.setAuditRequestDto(PartnerManageEnum.PARTNER_POLICY_MAPPING_NOT_EXISTS);
 			throw new PartnerServiceException(
 					PartnerExceptionConstants.PARTNER_POLICY_MAPPING_NOT_EXISTS.getErrorCode(),
 					PartnerExceptionConstants.PARTNER_POLICY_MAPPING_NOT_EXISTS.getErrorMessage());
@@ -901,16 +925,19 @@ public class PartnerServiceImpl implements PartnerService {
 		validateCredentialTypes(credentialType);
 		Optional<Partner> partnerFromDb = partnerRepository.findById(partnerId);
 		if (partnerFromDb.isEmpty()) {
+			auditUtil.setAuditRequestDto(PartnerManageEnum.PARTNER_ABSENT);
 			throw new PartnerDoesNotExistsException(
 					PartnerDoesNotExistExceptionConstant.PARTNER_DOES_NOT_EXIST_EXCEPTION.getErrorCode(),
 					PartnerDoesNotExistExceptionConstant.PARTNER_DOES_NOT_EXIST_EXCEPTION.getErrorMessage());
 		}
 		if (!Arrays.stream(credentialTypesRequiredPartnerTypes.split(",")).anyMatch(partnerFromDb.get().getPartnerTypeCode()::equalsIgnoreCase)) {
+			auditUtil.setAuditRequestDto(PartnerManageEnum.PARTNER_NOT_ALLOWED);
 			throw new PartnerServiceException(PartnerExceptionConstants.CREDENTIAL_NOT_ALLOWED_PARTNERS.getErrorCode(),
 					PartnerExceptionConstants.CREDENTIAL_NOT_ALLOWED_PARTNERS.getErrorMessage() + credentialTypesRequiredPartnerTypes);
 		}
 		Optional<AuthPolicy> authPolicy = authPolicyRepository.findById(policyId);
 		if (authPolicy.isEmpty()) {
+			auditUtil.setAuditRequestDto(PartnerManageEnum.POLICY_GROUP_ABSENT_CREATE);
 			throw new PartnerServiceException(
 					PartnerExceptionConstants.POLICY_NOT_EXIST.getErrorCode(),
 					PartnerExceptionConstants.POLICY_NOT_EXIST.getErrorMessage());
@@ -936,11 +963,13 @@ public class PartnerServiceImpl implements PartnerService {
 	public PartnerCredentialTypePolicyDto getPartnerCredentialTypePolicy(String credentialType,String partnerId) throws JsonParseException, JsonMappingException, IOException {
 		PartnerPolicyCredentialType partnerCredentialTypePolicy = partnerCredentialTypePolicyRepo.findByPartnerIdAndCrdentialType(partnerId, credentialType);
 		if(partnerCredentialTypePolicy == null) {
+			auditUtil.setAuditRequestDto(PartnerManageEnum.PARTNER_ABSENT);
 			throw new PartnerServiceException(PartnerExceptionConstants.NO_DETAILS_FOUND.getErrorCode(),
 					PartnerExceptionConstants.NO_DETAILS_FOUND.getErrorMessage());
 		}
 		Optional<AuthPolicy> authPolicy = authPolicyRepository.findById(partnerCredentialTypePolicy.getId().getPolicyId());
 		if (authPolicy.isEmpty()) {
+			auditUtil.setAuditRequestDto(PartnerManageEnum.POLICY_GROUP_ABSENT_CREATE);
 			throw new PartnerServiceException(
 					PartnerExceptionConstants.POLICY_NOT_EXIST.getErrorCode(),
 					PartnerExceptionConstants.POLICY_NOT_EXIST.getErrorMessage());
