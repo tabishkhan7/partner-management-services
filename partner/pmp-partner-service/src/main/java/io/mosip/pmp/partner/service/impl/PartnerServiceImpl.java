@@ -118,7 +118,6 @@ import io.mosip.pmp.partner.util.SearchHelper;
 
 /**
  * @author sanjeev.shrivastava
- * @author Nagarjuna
  * @since 1.2.0
  *
  */
@@ -384,7 +383,6 @@ public class PartnerServiceImpl implements PartnerService {
 					PartnerDoesNotExistExceptionConstant.PARTNER_DOES_NOT_EXIST_EXCEPTION.getErrorCode(),
 					PartnerDoesNotExistExceptionConstant.PARTNER_DOES_NOT_EXIST_EXCEPTION.getErrorMessage());
 		}
-
 		Partner partner = partnerFromDb.get();
 		LocalDateTime now = LocalDateTime.now();
 		partner.setAddress(request.getAddress());
