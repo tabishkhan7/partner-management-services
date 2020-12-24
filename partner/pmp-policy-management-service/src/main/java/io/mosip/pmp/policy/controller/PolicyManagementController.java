@@ -28,6 +28,7 @@ import io.mosip.pmp.common.dto.PolicySearchDto;
 import io.mosip.pmp.common.dto.SearchAuthPolicy;
 import io.mosip.pmp.common.dto.SearchDto;
 import io.mosip.pmp.common.entity.PolicyGroup;
+import io.mosip.pmp.policy.dto.KeyValuePair;
 import io.mosip.pmp.policy.dto.PolicyCreateRequestDto;
 import io.mosip.pmp.policy.dto.PolicyCreateResponseDto;
 import io.mosip.pmp.policy.dto.PolicyGroupCreateRequestDto;
@@ -317,25 +318,6 @@ public class PolicyManagementController {
 		auditUtil.setAuditRequestDto(PolicyManageEnum.GET_POLICY_GROUP_SUCCESS);
 		return response;
 	}
-	/*
-	 * @ResponseFilter
-	 * 
-	 * @PostMapping("/partnerPolicy/search")
-	 * 
-	 * @PreAuthorize(
-	 * "hasAnyRole('PARTNER','PMS_USER','AUTH_PARTNER','DEVICE_PROVIDER','FTM_PROVIDER','CREDENTIAL_PARTNER','CREDENTIAL_ISSUANCE','CREATE_SHARE','ID_AUTHENTICATION')")
-	 * public ResponseWrapper<PageResponseDto<PartnerPolicySearchDto>>
-	 * searchPartnerPolicy(
-	 * 
-	 * @RequestBody @Valid RequestWrapper<SearchDto> request) {
-	 * ResponseWrapper<PageResponseDto<PartnerPolicySearchDto>> responseWrapper =
-	 * new ResponseWrapper<>();
-	 * 
-	 * responseWrapper.setResponse(policyManagementService.searchPartnerPolicy(
-	 * request.getRequest()));
-	 * 
-	 * return responseWrapper; }
-	 */
 	
 	@ResponseFilter
 	@PostMapping("/policyGroup/search")
@@ -360,5 +342,12 @@ public class PolicyManagementController {
 		auditUtil.setAuditRequestDto(PolicyManageEnum.GET_POLICY_SUCCESS);
 		return responseWrapper;
 	}
-
+	
+	@PreAuthorize("hasAnyRole('POLICYMANAGER','policymanager')")
+	@GetMapping(value = "/policies/key/{key}")
+    public ResponseWrapper<KeyValuePair<String,Object>> getValueForKey(@PathVariable String key){
+		ResponseWrapper<KeyValuePair<String,Object>> responseWrapper = new ResponseWrapper<>();
+		responseWrapper.setResponse(policyManagementService.getValueForKey(key));
+    	return responseWrapper;
+    }
 }
