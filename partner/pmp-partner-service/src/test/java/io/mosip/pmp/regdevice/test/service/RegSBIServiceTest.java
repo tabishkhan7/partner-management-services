@@ -18,17 +18,17 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import io.mosip.pmp.authdevice.dto.SecureBiometricInterfaceCreateDto;
 import io.mosip.pmp.authdevice.dto.SecureBiometricInterfaceStatusUpdateDto;
 import io.mosip.pmp.authdevice.dto.SecureBiometricInterfaceUpdateDto;
+import io.mosip.pmp.authdevice.exception.RequestException;
+import io.mosip.pmp.partner.PartnerserviceApplication;
+import io.mosip.pmp.partner.util.AuditUtil;
 import io.mosip.pmp.regdevice.entity.RegDeviceDetail;
 import io.mosip.pmp.regdevice.entity.RegSecureBiometricInterface;
 import io.mosip.pmp.regdevice.entity.RegSecureBiometricInterfaceHistory;
-import io.mosip.pmp.authdevice.exception.RequestException;
 import io.mosip.pmp.regdevice.repository.RegDeviceDetailRepository;
 import io.mosip.pmp.regdevice.repository.RegSecureBiometricInterfaceHistoryRepository;
 import io.mosip.pmp.regdevice.repository.RegSecureBiometricInterfaceRepository;
 import io.mosip.pmp.regdevice.service.RegSecureBiometricInterfaceService;
 import io.mosip.pmp.regdevice.service.impl.RegSecureBiometricInterfaceServiceImpl;
-import io.mosip.pmp.authdevice.util.AuditUtil;
-import io.mosip.pmp.partner.PartnerserviceApplication;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { PartnerserviceApplication.class })

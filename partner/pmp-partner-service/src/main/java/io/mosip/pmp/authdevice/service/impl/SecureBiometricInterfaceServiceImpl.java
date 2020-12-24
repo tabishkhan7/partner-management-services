@@ -32,8 +32,8 @@ import io.mosip.pmp.authdevice.repository.DeviceDetailRepository;
 import io.mosip.pmp.authdevice.repository.SecureBiometricInterfaceHistoryRepository;
 import io.mosip.pmp.authdevice.repository.SecureBiometricInterfaceRepository;
 import io.mosip.pmp.authdevice.service.SecureBiometricInterfaceService;
-import io.mosip.pmp.authdevice.util.AuditUtil;
 import io.mosip.pmp.authdevice.util.AuthDeviceConstant;
+import io.mosip.pmp.partner.util.AuditUtil;
 import io.mosip.pmp.partner.util.MapperUtils;
 import io.mosip.pmp.partner.util.SearchHelper;
 

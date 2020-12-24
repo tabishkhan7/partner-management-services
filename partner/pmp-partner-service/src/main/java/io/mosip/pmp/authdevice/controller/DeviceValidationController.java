@@ -12,10 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 import io.mosip.kernel.core.http.ResponseFilter;
 import io.mosip.pmp.authdevice.dto.ResponseDto;
 import io.mosip.pmp.authdevice.dto.ValidateDeviceDto;
-import io.mosip.pmp.authdevice.util.AuditUtil;
 import io.mosip.pmp.authdevice.util.AuthDeviceConstant;
 import io.mosip.pmp.partner.core.RequestWrapper;
 import io.mosip.pmp.partner.core.ValidateResponseWrapper;
+import io.mosip.pmp.partner.util.AuditUtil;
 import io.mosip.pmp.regdevice.service.DeviceValidationService;
 import io.swagger.annotations.Api;
 

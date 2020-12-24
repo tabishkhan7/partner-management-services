@@ -34,10 +34,10 @@ import io.mosip.pmp.authdevice.dto.DeviceDetailUpdateDto;
 import io.mosip.pmp.authdevice.dto.IdDto;
 import io.mosip.pmp.authdevice.dto.UpdateDeviceDetailStatusDto;
 import io.mosip.pmp.authdevice.service.DeviceDetailService;
-import io.mosip.pmp.authdevice.util.AuditUtil;
 import io.mosip.pmp.partner.core.RequestWrapper;
 import io.mosip.pmp.partner.core.ResponseWrapper;
 import io.mosip.pmp.partner.test.PartnerserviceApplicationTest;
+import io.mosip.pmp.partner.util.AuditUtil;
 import io.mosip.pmp.regdevice.service.RegDeviceDetailService;
 
 @RunWith(SpringRunner.class)

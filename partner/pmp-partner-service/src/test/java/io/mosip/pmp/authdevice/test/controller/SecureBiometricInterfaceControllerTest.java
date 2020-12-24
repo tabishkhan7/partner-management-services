@@ -35,10 +35,10 @@ import io.mosip.pmp.authdevice.dto.SecureBiometricInterfaceCreateDto;
 import io.mosip.pmp.authdevice.dto.SecureBiometricInterfaceStatusUpdateDto;
 import io.mosip.pmp.authdevice.dto.SecureBiometricInterfaceUpdateDto;
 import io.mosip.pmp.authdevice.service.SecureBiometricInterfaceService;
-import io.mosip.pmp.authdevice.util.AuditUtil;
 import io.mosip.pmp.partner.core.RequestWrapper;
 import io.mosip.pmp.partner.core.ResponseWrapper;
 import io.mosip.pmp.partner.test.PartnerserviceApplicationTest;
+import io.mosip.pmp.partner.util.AuditUtil;
 import io.mosip.pmp.regdevice.service.RegSecureBiometricInterfaceService;
 
 @RunWith(SpringRunner.class)

@@ -34,7 +34,6 @@ import io.mosip.pmp.authdevice.exception.RequestException;
 import io.mosip.pmp.authdevice.repository.FTPChipDetailRepository;
 import io.mosip.pmp.authdevice.repository.FoundationalTrustProviderRepository;
 import io.mosip.pmp.authdevice.service.FTPChipDetailService;
-import io.mosip.pmp.authdevice.util.AuditUtil;
 import io.mosip.pmp.authdevice.util.AuthDeviceConstant;
 import io.mosip.pmp.partner.constant.ApiAccessibleExceptionConstant;
 import io.mosip.pmp.partner.core.RequestWrapper;
@@ -44,6 +43,7 @@ import io.mosip.pmp.partner.dto.PartnerCertificateResponseDto;
 import io.mosip.pmp.partner.entity.Partner;
 import io.mosip.pmp.partner.exception.ApiAccessibleException;
 import io.mosip.pmp.partner.repository.PartnerServiceRepository;
+import io.mosip.pmp.partner.util.AuditUtil;
 import io.mosip.pmp.partner.util.RestUtil;
 
 

@@ -20,12 +20,14 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+
 
 import io.mosip.pmp.partner.PartnerserviceApplication;
 import io.mosip.pmp.partner.dto.APIkeyRequests;
@@ -51,6 +53,7 @@ import io.mosip.pmp.partner.entity.PolicyGroup;
 import io.mosip.pmp.partner.exception.APIKeyReqIdStatusInProgressException;
 import io.mosip.pmp.partner.exception.PartnerAPIKeyIsNotCreatedException;
 import io.mosip.pmp.partner.exception.PartnerAPIKeyReqIDDoesNotExistException;
+import io.mosip.pmp.partner.exception.PartnerAlreadyRegisteredException;
 import io.mosip.pmp.partner.exception.PartnerDoesNotExistException;
 import io.mosip.pmp.partner.exception.PartnerDoesNotExistsException;
 import io.mosip.pmp.partner.exception.PartnerServiceException;
@@ -65,13 +68,15 @@ import io.mosip.pmp.partner.repository.PartnerServiceRepository;
 import io.mosip.pmp.partner.repository.PartnerTypeRepository;
 import io.mosip.pmp.partner.repository.PolicyGroupRepository;
 import io.mosip.pmp.partner.service.impl.PartnerServiceImpl;
+import io.mosip.pmp.partner.test.PartnerserviceApplicationTest;
+import io.mosip.pmp.partner.util.AuditUtil;
 
 /**
  * @author sanjeev.shrivastava
  *
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = { PartnerserviceApplication.class })
+@SpringBootTest(classes = { PartnerserviceApplicationTest.class })
 @AutoConfigureMockMvc
 @EnableWebMvc
 public class PartnerServiceImplTest {
@@ -96,6 +101,9 @@ public class PartnerServiceImplTest {
 	@Mock
 	PartnerPolicyCredentialTypeRepository partnerCredentialTypePolicyRepo;
 	
+	@MockBean
+	private AuditUtil audit;
+	
 	@Before
 	public void setUp() {
 		MockitoAnnotations.initMocks(this);
@@ -107,7 +115,7 @@ public class PartnerServiceImplTest {
 		ReflectionTestUtils.setField(pserviceImpl, "partnerTypeRepository", partnerTypeRepository);
 		ReflectionTestUtils.setField(pserviceImpl, "extractorProviderRepository", extractorProviderRepository);
 		ReflectionTestUtils.setField(pserviceImpl, "partnerCredentialTypePolicyRepo", partnerCredentialTypePolicyRepo);
-
+		Mockito.doNothing().when(audit).setAuditRequestDto(Mockito.any());
 	}
 	
 	@Test
@@ -199,7 +207,7 @@ public class PartnerServiceImplTest {
 		pserviceImpl.savePartner(partnerRequest);
 	}
 
-	@Test(expected = PartnerTypeDoesNotExistException.class)	
+	@Test(expected = PartnerAlreadyRegisteredException.class)	
 	public void throwExceptionWhenPartnerNameAlreadyRegisteredTest() {
 		PolicyGroup policyGroup = createPolicyGroup(Boolean.TRUE);
 		PartnerRequest partnerRequest = createPartnerRequest();

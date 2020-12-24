@@ -26,10 +26,10 @@ import io.mosip.pmp.authdevice.repository.DeviceDetailRepository;
 import io.mosip.pmp.authdevice.repository.RegistrationDeviceSubTypeRepository;
 import io.mosip.pmp.authdevice.service.DeviceDetailService;
 import io.mosip.pmp.authdevice.service.impl.DeviceDetailServiceImpl;
-import io.mosip.pmp.authdevice.util.AuditUtil;
 import io.mosip.pmp.partner.PartnerserviceApplication;
 import io.mosip.pmp.partner.entity.Partner;
 import io.mosip.pmp.partner.repository.PartnerServiceRepository;
+import io.mosip.pmp.partner.util.AuditUtil;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { PartnerserviceApplication.class })

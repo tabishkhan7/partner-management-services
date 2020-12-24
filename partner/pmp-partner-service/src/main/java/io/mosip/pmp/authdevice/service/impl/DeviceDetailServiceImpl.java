@@ -30,9 +30,9 @@ import io.mosip.pmp.authdevice.exception.RequestException;
 import io.mosip.pmp.authdevice.repository.DeviceDetailRepository;
 import io.mosip.pmp.authdevice.repository.RegistrationDeviceSubTypeRepository;
 import io.mosip.pmp.authdevice.service.DeviceDetailService;
-import io.mosip.pmp.authdevice.util.AuditUtil;
 import io.mosip.pmp.authdevice.util.AuthDeviceConstant;
 import io.mosip.pmp.partner.repository.PartnerServiceRepository;
+import io.mosip.pmp.partner.util.AuditUtil;
 import io.mosip.pmp.partner.util.MapperUtils;
 import io.mosip.pmp.partner.util.SearchHelper;
 

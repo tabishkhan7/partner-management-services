@@ -27,8 +27,8 @@ import io.mosip.pmp.authdevice.repository.SecureBiometricInterfaceHistoryReposit
 import io.mosip.pmp.authdevice.repository.SecureBiometricInterfaceRepository;
 import io.mosip.pmp.authdevice.service.SecureBiometricInterfaceService;
 import io.mosip.pmp.authdevice.service.impl.SecureBiometricInterfaceServiceImpl;
-import io.mosip.pmp.authdevice.util.AuditUtil;
 import io.mosip.pmp.partner.PartnerserviceApplication;
+import io.mosip.pmp.partner.util.AuditUtil;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { PartnerserviceApplication.class })
